@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChudPresence.Link.Core/ChudPresence.Link.Core.csproj" />
+    <Project Path="src/ChudPresence.Link.Server/ChudPresence.Link.Server.csproj" />
+    <Project Path="src/ChudPresence.Link.Windows/ChudPresence.Link.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChudPresence.Link.Checks/ChudPresence.Link.Checks.csproj" />
+    <Project Path="tests/ChudPresence.Link.Windows.Checks/ChudPresence.Link.Windows.Checks.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,1589 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ChudPresence Link",
+    "version": "1.3.0",
+    "description": "Client-reported browser/phone service discovery, per-service selective settings sync, change events, and loopback desktop presence. See API.md and CONNECTING.md for integration."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:17879"
+    }
+  ],
+  "security": [
+    {
+      "pairingToken": []
+    }
+  ],
+  "paths": {
+    "/v1/info": {
+      "get": {
+        "operationId": "getInfo",
+        "description": "Discover protocol capabilities and stable server identity.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Info"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pair": {
+      "post": {
+        "operationId": "pairDevice",
+        "description": "Redeem a native-UI pairing code. Browser Origin is required and bound to the token; mobile must omit Origin. Five attempts per IP per minute.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device": {
+      "delete": {
+        "operationId": "unpairSelf",
+        "description": "Revoke the calling token and clear its presence.",
+        "responses": {
+          "204": {
+            "description": "Completed; no response body."
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/services": {
+      "get": {
+        "operationId": "discoverServices",
+        "description": "Find the caller's installed services shared by a browser and phone, common settings, selected fields, reported source values, and opt-in state.",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesSnapshot"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "reportServices",
+        "description": "Replace the caller's full installed service inventory. Empty removes all. Reporting never enables sync or changes shared preferences.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesSnapshot"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/services/{serviceId}/sync": {
+      "put": {
+        "operationId": "configureServiceSync",
+        "description": "Enable, reconfigure, or disable synchronization for a reported service. Select fields from supportedFields and exactly one sourceDeviceId, initialDisplay, or initialSettings. Omitting fields selects display only. baseVersion is syncVersion from discovery.",
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 64
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesSnapshot"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/settings": {
+      "get": {
+        "operationId": "getSettings",
+        "description": "Get only selected settings for the caller's reported services with active sync. Unselected fields are omitted.",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsSnapshot"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "changeSettings",
+        "description": "Partially update selected settings with a per-service compare-and-swap version. Omitted fields remain unchanged. Unselected fields reject the batch with field_not_synced; stale conflicts return 200 with the filtered snapshot and conflicts array.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "operationId": "watchChanges",
+        "description": "Authenticated Server-Sent Events stream. Immediately emits the current revision and serverId, then coalesced revision hints after durable changes; fetch services and settings after each hint. Sends an idle comment every 120 seconds. Revocation emits a revoked event and closes the stream. Opening another stream for the same device closes its previous stream.",
+        "responses": {
+          "200": {
+            "description": "Streaming revision and revocation events.",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "id: 7\nevent: revision\ndata: {\"serverId\":\"server-id\",\"revision\":7}\n\n"
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "operationId": "getStatus",
+        "description": "Inspect desktop publishing. May contain the current browser title.",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresenceStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/presence/lease": {
+      "post": {
+        "operationId": "acquirePresence",
+        "description": "Loopback browser only. Reserve a 30-second lease after connecting to Discord. Clear headless publishing before sending desktop intent. Send existing leaseId to renew reservation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaseView"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/presence": {
+      "put": {
+        "operationId": "updatePresence",
+        "description": "Accept latest presence and renew ownership. Increment sequence and heartbeat every 10 seconds. Null intent clears presence while retaining ownership. Acceptance is asynchronous.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaseView"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/presence/lease/{leaseId}": {
+      "delete": {
+        "operationId": "releasePresence",
+        "description": "Clear activity and release ownership. On network failure wait 35 seconds after the last attempted request finishes or times out before headless fallback.",
+        "parameters": [
+          {
+            "name": "leaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Completed; no response body."
+          },
+          "default": {
+            "description": "API error. See docs/API.md for status codes, ownership rules, and Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "pairingToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque 64-character token"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ]
+      },
+      "Info": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "const": "ChudPresence Link"
+          },
+          "version": {
+            "type": "string"
+          },
+          "protocolVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "serverId": {
+            "type": "string"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "displayChoices": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "app",
+                "creator",
+                "title"
+              ]
+            }
+          },
+          "settingFields": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "display",
+                "enabled",
+                "showWhilePaused",
+                "artwork",
+                "playbackProgress",
+                "actionButtons"
+              ]
+            }
+          },
+          "presenceLeaseSeconds": {
+            "type": "integer",
+            "const": 30
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "protocolVersion",
+          "serverId",
+          "capabilities",
+          "displayChoices",
+          "settingFields",
+          "presenceLeaseSeconds"
+        ]
+      },
+      "PairRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "browser",
+              "mobile"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "kind"
+        ]
+      },
+      "PairResponse": {
+        "type": "object",
+        "properties": {
+          "serverId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "protocolVersion": {
+            "type": "integer",
+            "const": 1
+          }
+        },
+        "required": [
+          "serverId",
+          "deviceId",
+          "token",
+          "protocolVersion"
+        ]
+      },
+      "ServiceValues": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "creator",
+                  "title"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Enable this service; separate from enabling its settings sync."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "showWhilePaused": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Keep activity visible while paused."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "artwork": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show cover art or a video thumbnail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playbackProgress": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show media elapsed and remaining playback time. When false, Discord falls back to its green app/activity elapsed timer on both the browser extension and mobile app; that timer may continue while paused if the activity stays visible."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actionButtons": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show watch, play, or channel action buttons."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "ServicePreference": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "type": "string",
+            "enum": [
+              "app",
+              "creator",
+              "title"
+            ]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable this service; separate from enabling its settings sync."
+          },
+          "showWhilePaused": {
+            "type": "boolean",
+            "description": "Keep activity visible while paused."
+          },
+          "artwork": {
+            "type": "boolean",
+            "description": "Show cover art or a video thumbnail."
+          },
+          "playbackProgress": {
+            "type": "boolean",
+            "description": "Show media elapsed and remaining playback time. When false, Discord falls back to its green app/activity elapsed timer on both the browser extension and mobile app; that timer may continue while paused if the activity stays visible."
+          },
+          "actionButtons": {
+            "type": "boolean",
+            "description": "Show watch, play, or channel action buttons."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "description": "Only selected settings are present. An omitted setting stays local to each client.",
+        "additionalProperties": false
+      },
+      "PreferenceChange": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "creator",
+                  "title"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Enable this service; separate from enabling its settings sync."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "showWhilePaused": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Keep activity visible while paused."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "artwork": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show cover art or a video thumbnail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playbackProgress": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show media elapsed and remaining playback time. When false, Discord falls back to its green app/activity elapsed timer on both the browser extension and mobile app; that timer may continue while paused if the activity stays visible."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actionButtons": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show watch, play, or channel action buttons."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "baseVersion"
+        ],
+        "description": "Supply at least one selected setting. Omitted or null values are unchanged. The version applies to the whole service.",
+        "minProperties": 2,
+        "additionalProperties": false
+      },
+      "SettingsSnapshot": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "services": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ServicePreference"
+            },
+            "maxProperties": 256,
+            "propertyNames": {
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "revision",
+          "services"
+        ]
+      },
+      "SettingsRequest": {
+        "type": "object",
+        "properties": {
+          "changes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PreferenceChange"
+            },
+            "maxProperties": 128,
+            "propertyNames": {
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "changes"
+        ]
+      },
+      "SettingsResult": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "services": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ServicePreference"
+            },
+            "maxProperties": 256,
+            "propertyNames": {
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 64
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "revision",
+          "services",
+          "conflicts"
+        ]
+      },
+      "ClientService": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "creator",
+                  "title"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Enable this service; separate from enabling its settings sync."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "showWhilePaused": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Keep activity visible while paused."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "artwork": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show cover art or a video thumbnail."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playbackProgress": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show media elapsed and remaining playback time. When false, Discord falls back to its green app/activity elapsed timer on both the browser extension and mobile app; that timer may continue while paused if the activity stays visible."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actionButtons": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Show watch, play, or channel action buttons."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "displayChoices": {
+            "type": "array",
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "app",
+                "creator",
+                "title"
+              ]
+            },
+            "description": "Defaults to all three choices when display is present; otherwise empty. Without display, omit or send an empty array."
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "description": "Report at least one current supported setting. Omit unsupported settings; explicit false advertises boolean support. A display needs a supported current value.",
+        "additionalProperties": false
+      },
+      "ServicesRequest": {
+        "type": "object",
+        "properties": {
+          "services": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "$ref": "#/components/schemas/ClientService"
+            }
+          }
+        },
+        "required": [
+          "services"
+        ]
+      },
+      "ServiceSyncRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "baseVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sourceDeviceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initialDisplay": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "app",
+                  "creator",
+                  "title"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "display",
+                "enabled",
+                "showWhilePaused",
+                "artwork",
+                "playbackProgress",
+                "actionButtons"
+              ]
+            },
+            "default": [
+              "display"
+            ],
+            "description": "Explicit settings to share. For all currently supported settings, send supportedFields from discovery."
+          },
+          "initialSettings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ServiceValues"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "enabled",
+          "baseVersion"
+        ],
+        "additionalProperties": false,
+        "description": "Enabling requires exactly one sourceDeviceId, initialDisplay, or initialSettings and values for every selected field. Disabling accepts only enabled and baseVersion."
+      },
+      "ServiceParticipant": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "type": "string",
+            "enum": [
+              "app",
+              "creator",
+              "title"
+            ]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable this service; separate from enabling its settings sync."
+          },
+          "showWhilePaused": {
+            "type": "boolean",
+            "description": "Keep activity visible while paused."
+          },
+          "artwork": {
+            "type": "boolean",
+            "description": "Show cover art or a video thumbnail."
+          },
+          "playbackProgress": {
+            "type": "boolean",
+            "description": "Show media elapsed and remaining playback time. When false, Discord falls back to its green app/activity elapsed timer on both the browser extension and mobile app; that timer may continue while paused if the activity stays visible."
+          },
+          "actionButtons": {
+            "type": "boolean",
+            "description": "Show watch, play, or channel action buttons."
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "browser",
+              "mobile"
+            ]
+          },
+          "reportedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "deviceId",
+          "name",
+          "kind",
+          "reportedAt"
+        ]
+      },
+      "SharedService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shared": {
+            "type": "boolean"
+          },
+          "syncEnabled": {
+            "type": "boolean"
+          },
+          "syncVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "displayChoices": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "app",
+                "creator",
+                "title"
+              ]
+            }
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceParticipant"
+            }
+          },
+          "supportedFields": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "display",
+                "enabled",
+                "showWhilePaused",
+                "artwork",
+                "playbackProgress",
+                "actionButtons"
+              ]
+            }
+          },
+          "syncFields": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "display",
+                "enabled",
+                "showWhilePaused",
+                "artwork",
+                "playbackProgress",
+                "actionButtons"
+              ]
+            }
+          },
+          "syncRequested": {
+            "type": "boolean",
+            "description": "Saved opt-in; true with syncEnabled false means sync is paused for incompatibility or missing overlap."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shared",
+          "syncEnabled",
+          "syncVersion",
+          "displayChoices",
+          "participants",
+          "supportedFields",
+          "syncFields",
+          "syncRequested"
+        ]
+      },
+      "ServicesSnapshot": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedService"
+            }
+          }
+        },
+        "required": [
+          "revision",
+          "services"
+        ]
+      },
+      "LeaseRequest": {
+        "type": "object",
+        "properties": {
+          "leaseId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": []
+      },
+      "LeaseView": {
+        "type": "object",
+        "properties": {
+          "leaseId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "heartbeatSeconds": {
+            "type": "integer",
+            "const": 10
+          },
+          "fallbackGraceSeconds": {
+            "type": "integer",
+            "const": 5
+          }
+        },
+        "required": [
+          "leaseId",
+          "expiresAt",
+          "heartbeatSeconds",
+          "fallbackGraceSeconds"
+        ]
+      },
+      "PresenceRequest": {
+        "type": "object",
+        "properties": {
+          "leaseId": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceIntent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "leaseId",
+          "sequence",
+          "intent"
+        ]
+      },
+      "PresenceIntent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "At most 128 UTF-8 bytes; no control characters.",
+            "minLength": 1
+          },
+          "details": {
+            "type": "string",
+            "description": "At most 128 UTF-8 bytes; no control characters.",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "playing",
+              "streaming",
+              "listening",
+              "watching",
+              "competing"
+            ],
+            "default": "watching"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "At most 128 UTF-8 bytes; no control characters."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "statusDisplayType": {
+            "type": "string",
+            "enum": [
+              "name",
+              "state",
+              "details"
+            ],
+            "default": "name"
+          },
+          "detailsUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stateUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timestamps": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceTimestamps"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceAssets"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "buttons": {
+            "anyOf": [
+              {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "$ref": "#/components/schemas/PresenceButton"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "details"
+        ]
+      },
+      "PresenceTimestamps": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0,
+                "maximum": 8640000000000,
+                "description": "Unix seconds, not milliseconds."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0,
+                "maximum": 8640000000000,
+                "description": "Unix seconds; must not precede start."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": []
+      },
+      "PresenceAssets": {
+        "type": "object",
+        "properties": {
+          "largeImage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "largeText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "At most 128 UTF-8 bytes; no control characters."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "largeUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "smallImage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "smallText": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "At most 128 UTF-8 bytes; no control characters."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": []
+      },
+      "PresenceButton": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "At most 32 UTF-8 bytes; no control characters."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ]
+      },
+      "PresenceStatus": {
+        "type": "object",
+        "properties": {
+          "discordConnected": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "deviceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "published": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "discordConnected",
+          "message",
+          "deviceId",
+          "expiresAt",
+          "details",
+          "published"
+        ]
+      }
+    }
+  }
+}

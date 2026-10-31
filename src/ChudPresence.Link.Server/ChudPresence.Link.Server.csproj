@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Library</OutputType></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../ChudPresence.Link.Core/ChudPresence.Link.Core.csproj" /></ItemGroup>
+</Project>

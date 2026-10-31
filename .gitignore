@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+dist/
+artifacts/
+.vs/
+*.user
+*.log
+/AGENTS.md

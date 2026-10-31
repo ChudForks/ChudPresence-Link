@@ -1,0 +1,2 @@
+# The generated OpenAPI check compares exact bytes and always emits LF.
+docs/openapi.json text eol=lf

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/ChudPresence.Link.Windows/SyncSelection.cs" Link="SyncSelection.cs" />
+    <Compile Include="../../src/ChudPresence.Link.Windows/LaunchOptions.cs" Link="LaunchOptions.cs" />
+    <ProjectReference Include="../../src/ChudPresence.Link.Core/ChudPresence.Link.Core.csproj" />
+  </ItemGroup>
+</Project>
